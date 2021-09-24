@@ -2,10 +2,11 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import scrolledtext
-import os,time
+import os
 from datetime import datetime
 from tkinter import messagebox
 from getpass import getuser
+
 
 root=Tk()
 
@@ -21,6 +22,13 @@ Source code for this is available in : https://github.com/sibisita/Multi-Search/
 Sibi
 
 '''
+
+def to_escape_error():
+    try:
+        search_main_func()
+    except:
+        logs_entry("Some error Occured!! Close this application.")
+
 
 def new_window():
     window11 = Toplevel(root)
@@ -79,7 +87,10 @@ def search_one_file(search_value_list,file_path,save_file_handler,local_counter)
 def file_path_func():
     files_all=[]
     if chvar.get() == 0: 
-        files_all = [ (search_location1+"/"+f) for f in os.listdir(search_location1) if os.path.isfile(os.path.join(search_location1, f))]
+        for (root_dir,_,files) in os.walk(search_location1, topdown=True):
+            if search_location1==root_dir:
+                for i in files:
+                    files_all.append(root_dir+"/"+i)        
     else:  
         for (root_dir,_,files) in os.walk(search_location1, topdown=True):
             for i in files:
@@ -102,6 +113,7 @@ def save_in_folder():
 
 
 def search_main_func():
+    
     search.configure(state="disabled")
     start_time=datetime.now() #Start time to calculate time taken
 
@@ -117,13 +129,12 @@ def search_main_func():
     
     # Extracting values from screen
     search_values=(text_area.get("1.0","end")).lower().splitlines()
-    for x in search_values:
-        if len(x)==0:
-            search_values.remove(x) #removing empty entries.  
+    search_value_set=set(search_values)
+    search_value_set.remove("")
     
     #initiating counter for each value
     counter={}
-    for x in search_values:
+    for x in search_value_set:
         counter[x]=0
 
     file_path_list = file_path_func() 
@@ -132,14 +143,15 @@ def search_main_func():
 
     completed_files_count=0
     f1={} #To handle multiple files
-    for value in search_values:
+    for value in search_value_set:
         f1[value]=open(multi_search_folder+"/"+value+".txt","a+")
     for i in file_path_list:
-        counter = search_one_file (search_values,i,f1,counter)
+        counter = search_one_file (search_value_set,i,f1,counter)
         completed_files_count+=1
         file_count.configure(text="Search progress stats : {} / {} Completed".format(completed_files_count,number_of_files_to_search))
-        root.update_idletasks()
-    for value in search_values:
+        root.update()
+        
+    for value in search_value_set:
         f1[value].close()
         #logic to delete empty files from save folder
         if counter[value]==0:
@@ -173,15 +185,51 @@ def search_main_func():
         output_window.configure(state='disabled')
         output_window.yview(END)
         output_lable.grid(column=11, row=0,sticky="w",columnspan=2)
+        search.grid_forget()
+        reset.grid(column=3, row=6)
     
 
+def reset_func():
+    output_window.grid_forget()
+    output_lable.grid_forget()
+    global search_location1,save_location1,number_of_files_to_search
+    search_location1 = Current_working_directory
+    l1.configure(text=search_location1)
+    save_location1 = Current_working_directory
+    l2.configure(text=save_location1)
+    chvar.set(0)#checkbox variable
+    number_of_files_to_search=0
+    metadata_area.delete("1.0",END)
+    metadata_area.insert(END,"Metadata : \n\n")
+    text_area.delete("1.0",END)
+    output_window.configure(state="normal")
+    output_window.delete("1.0",END)
+    statusbar.configure(state="normal")
+    statusbar.delete("1.0",END)
+    statusbar.insert(INSERT, "Here comes the logs\n\n")
+    statusbar.configure(state='disabled')
+    reset.grid_forget()
+    search.grid(column=3, row=6)
+    search.configure(state="normal")
+    file_count.configure(text="Search progress stats will appear here!!!")
+    root.update_idletasks()
+
+
+def resource_path(relative_path):
+    try:
+        base_path = os.sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 #front end
 root.title("Multi-Search")
 ttk.Label(root, text="Enter the values to be searched below: ",font=("Times New Roman", 15)).grid(column=0, row=0,sticky="w",columnspan=2)
 text_area = scrolledtext.ScrolledText(root, wrap=WORD, width=30, height=15,font=("Times New Roman", 12))
-search=ttk.Button(root,text="Search",command=search_main_func)
+search=Button(root,text="Search",bg="green",fg="yellow",font=20,command= to_escape_error)
+reset=ttk.Button(root,text="Reset",command= reset_func)
 about=ttk.Button(root,text="About",width=8,command=new_window)
 metadata_area = scrolledtext.ScrolledText(root, wrap=WORD, width=25, height=10,font=("Times New Roman", 12))
 metadata_area.configure(state='normal')
@@ -198,15 +246,20 @@ statusbar.insert(INSERT, "Here comes the logs\n\n")
 statusbar.configure(state='disabled')
 output_window=scrolledtext.ScrolledText(root, wrap=WORD, width=30, height=30,state='disabled',font=("Times New Roman", 12))
 output_lable=ttk.Label(root, text="Searched values and their number of occurances: ",font=("Times New Roman", 10))
-photo = PhotoImage(file = ".\\icon.png")
-root.iconphoto(False,photo)
+try:
+    photo = PhotoImage(file = resource_path("icon.png"))
+    root.iconphoto(False,photo)
+except:
+    pass
+
+
 
 #grid position
 text_area.grid(column=0, row=2, pady=1, padx=1,sticky="w",rowspan=15,columnspan=2)
 search.grid(column=3, row=6)
-about.grid(column=4, row=0,padx=5)
-metadata_area.grid(column=3, row=8, padx=1,sticky="w")
-subdir.grid(column=3, row=5)
+about.grid(column=4, row=0,padx=5,sticky=N+E)
+metadata_area.grid(column=3, row=8, padx=1,sticky="w",columnspan=3)
+subdir.grid(column=4, row=20, padx=20,sticky=N+W)
 l1.grid(column=0, row=18, pady=1, padx=1,sticky="w")
 search_loc.grid(column=3, row=18, padx=1,sticky="w")
 space.grid(column=0, row=20, pady=1, padx=1,sticky="w")
