@@ -27,7 +27,7 @@ def to_escape_error():
     try:
         search_main_func()
     except:
-        logs_entry("Some error Occured!! Close this application.")
+        logs_entry("Some error Occured!! Close this application.\n\n"+str(os.sys.exc_info()))
 
 
 def new_window():
@@ -130,7 +130,9 @@ def search_main_func():
     # Extracting values from screen
     search_values=(text_area.get("1.0","end")).lower().splitlines()
     search_value_set=set(search_values)
-    search_value_set.remove("")
+    if "" in search_value_set:
+        search_value_set.remove("")
+    
     
     #initiating counter for each value
     counter={}
