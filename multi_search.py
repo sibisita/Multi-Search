@@ -14,14 +14,23 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 root=Tk()
 
 about_this_application='''
-
 Hi,
 
-This application is created for searching a list of IPs from hundreds of network device backup folder. This can be be used for other use cases as well.
+This application is created for searching a list of IPs from hundreds of network device backup folder. 
+This can be be used for other use cases as well.
+Source code for this is available in : https://github.com/sibisita/Multi-Search/blob/main/multi_search.py .
 
-Source code for this is available in : https://github.com/sibisita/Multi-Search/blob/main/multi-search.py
+Instructions:
+Step 1: Enter the values you want to search in top left box. Each line is taken a seperate entry.
+Step 2: Select the location where you have the files to be searched. Use 'Browse Search Folder' button.
+Step 3: Select the location where you want the results to be saved. Use 'Browse Save Folder' button.
+Step 4: (Optional) You can enter any notes in the box below the search button.
+Step 5: Press search button.
 
+After the search is completed. The results location is automatically opened in windows file explorer.
+In the application, you can press reset to search again.
 
+Regards,
 Sibi
 
 '''
@@ -35,14 +44,17 @@ def to_escape_error():
 
 def new_window():
     window11 = Toplevel(root)
+    window11.geometry("1000x400")
+    
     window11.title("About This Application!")
-    a11=Text(window11)
+    a11=Text(window11,height=400,width=1000)
     a11.insert(INSERT,about_this_application)
-    a11.pack()
+    a11.grid(column=0, row=0, pady=1, padx=1,sticky="w")
+    window11.iconphoto(False,photo)
 
 Current_working_directory = ("/".join(os.getcwd().split("\\")))
 search_location1 = "Folder to search not selected."
-save_location1 = Current_working_directory
+save_location1 = os.path.expanduser('~')
 chvar=IntVar(root)
 chvar.set(0)#checkbox variable
 number_of_files_to_search=0
@@ -74,7 +86,7 @@ def search_one_file(arguments):
         read_file=False
         return(read_file,local_counter)
         
-    index=0   
+    index=1   
     
     for line in data:
         for value in search_value_list:
@@ -144,7 +156,7 @@ def search_main_func():
     # Creating folder to save result
     i=1
     global save_location1
-    multi_search_folder=save_location1+str("/MultiSearch")
+    multi_search_folder=save_location1+str("\\MultiSearch")
     lenght_multi_search_folder=len(multi_search_folder)
     while(os.path.exists(multi_search_folder)):
         multi_search_folder=multi_search_folder[:lenght_multi_search_folder]+str(i)
@@ -189,7 +201,7 @@ def search_main_func():
                 i+=1
             search_value_save_path[temp]=(multi_search_folder+"/"+value+".txt")  
             f1[temp]=open(search_value_save_path [temp] ,"a+")
-            f1[temp].write("Searched for : "+temp+"\nSaved at "+multi_search_folder+"/"+value+".txt\n")
+            f1[temp].write("Searched for : "+temp+"\nSaved at "+multi_search_folder+"\\"+value+".txt\n")
         except:
             value=temp
             invalid_filname_char=["/","\\","?","*","\"",">","<","|",":"]
@@ -251,27 +263,26 @@ def search_main_func():
 
     logs_entry("Search of {} files completed in {} seconds.\n\n".format(completed_files_count,completed_in))
 
-    with open(multi_search_folder+"/logfile.log","w+") as f1:
+    with open(multi_search_folder+"/zz_logfile.log","w+") as f1:
         f1.write("Search of {} files completed in {} seconds.\n\n".format(completed_files_count,completed_in))
         f1.write("Search conducted by '"+getuser()+"' at "+search_location1+"\n\n")
+        f1.write("\n"+"*"*130+"\n")
         f1.write(metadata_area.get("1.0","end"))
+        f1.write("\n"+"*"*130+"\n")
         f1.write("\n\nSearched Values\t:\tCount\n")
         f1.write("\n"+str(counter).replace(", ","\n").replace(":","\t\t:\t")[1:-1])
     
-    MsgBox = messagebox.askquestion ('Exit Application','Search Completed. Press Yes to exit.\n Press no to verify logs. ',icon = 'info')
-    if MsgBox == 'yes':
-        root.destroy()
-    else:
-        output_window.grid(column=11,row=1,pady=5, padx=5, rowspan=100,sticky="nw")
-        output_window.configure(state='normal')
-        output_window.insert(END, "Search of {} files completed in {} seconds.\n\n".format(completed_files_count,completed_in))
-        output_window.insert(END, "\n\nSearched Values  \t:\tCount\n")
-        output_window.insert(END, str(counter).replace(", ","\n").replace(":","\t\t:\t")[1:-1])
-        output_window.configure(state='disabled')
-        output_window.yview(END)
-        output_lable.grid(column=11, row=0,sticky="w",columnspan=2)
-        search.grid_forget()
-        reset.grid(column=3, row=6)
+    
+    output_window.grid(column=11,row=1,pady=5, padx=5, rowspan=100,sticky="nw")
+    output_window.configure(state='normal')
+    output_window.insert(END, "Search of {} files completed in {} seconds.\n\n".format(completed_files_count,completed_in))
+    output_window.insert(END, "\n\nSearched Values  \t:\tCount\n")
+    output_window.insert(END, str(counter).replace(", ","\n").replace(":","\t\t:\t")[1:-1])
+    output_window.configure(state='disabled')
+    output_window.yview(END)
+    output_lable.grid(column=11, row=0,sticky="w",columnspan=2)
+    search.grid_forget()
+    reset.grid(column=3, row=6)
     
 
 def reset_func():
@@ -280,12 +291,12 @@ def reset_func():
     global search_location1,save_location1,number_of_files_to_search
     search_location1 = "Folder to search not selected."
     l1.configure(text=search_location1)
-    save_location1 = Current_working_directory
+    save_location1 = os.path.expanduser('~')
     l2.configure(text=save_location1)
     chvar.set(0)#checkbox variable
     number_of_files_to_search=0
     metadata_area.delete("1.0",END)
-    metadata_area.insert(END,"Metadata : \n\n")
+    metadata_area.insert(END,"Your notes come below.\n")
     text_area.delete("1.0",END)
     output_window.configure(state="normal")
     output_window.delete("1.0",END)
@@ -317,9 +328,9 @@ text_area = scrolledtext.ScrolledText(root, wrap=WORD, width=30, height=15,font=
 search=Button(root,text="Search",bg="green",fg="yellow",font=20,command= to_escape_error)
 reset=ttk.Button(root,text="Reset",command= reset_func)
 about=ttk.Button(root,text="About",width=8,command=new_window)
-metadata_area = scrolledtext.ScrolledText(root, wrap=WORD, width=25, height=10,font=("Times New Roman", 12))
+metadata_area = scrolledtext.ScrolledText(root, wrap=WORD, width=25, height=5,font=("Times New Roman", 12))
 metadata_area.configure(state='normal')
-metadata_area.insert(END, "Metadata : \n\n")
+metadata_area.insert(END, "Your notes come below.\n")
 subdir=ttk.Checkbutton(root,text="Use subdirectory",variable=chvar)
 l1=ttk.Label(root, text=search_location1)
 search_loc=ttk.Button(root,text="Browse search folder",command=search_in_folder)
@@ -330,7 +341,7 @@ file_count=ttk.Label(root, text="Search progress stats will appear here!!!",font
 statusbar=scrolledtext.ScrolledText(root, wrap=WORD, width=60, height=15,font=("Times New Roman", 12))
 statusbar.insert(INSERT, "Here comes the logs\n\n")
 statusbar.configure(state='disabled')
-output_window=scrolledtext.ScrolledText(root, wrap=WORD, width=30, height=30,state='disabled',font=("Times New Roman", 12))
+output_window=scrolledtext.ScrolledText(root, wrap=WORD, width=45, height=30,state='disabled',font=("Times New Roman", 12))
 output_lable=ttk.Label(root, text="Searched values and their number of occurances: ",font=("Times New Roman", 10))
 try:
     photo = PhotoImage(file = resource_path("icon.png"))
