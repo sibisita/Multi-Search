@@ -39,9 +39,6 @@ Multi-Search is a Python-based GUI application built with Tkinter. It allows use
 4. Click **Search** to start.
 5. View results and logs within the application.
 
-## Screenshots
-_Add screenshots here if available._
-
 ## Contributing
 Feel free to fork the repository and submit pull requests for improvements.
 
@@ -49,5 +46,5 @@ Feel free to fork the repository and submit pull requests for improvements.
 This project is licensed under the MIT License.
 
 ## Author
-[Your Name](https://github.com/your-username)
+[Sibi C B](https://github.com/sibisita)
 
